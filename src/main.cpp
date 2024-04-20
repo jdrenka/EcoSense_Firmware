@@ -6,6 +6,7 @@ Adafruit_SHT31 sht31 = Adafruit_SHT31();
 
 void setup() {
     Serial.begin(115200);
+    Serial.println('oi');
     if (!sht31.begin(0x44)) {   // Set to the default I2C address for SHT31
         Serial.println("Couldn't find SHT31");
         while (1) delay(1);
