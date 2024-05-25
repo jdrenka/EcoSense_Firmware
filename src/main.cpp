@@ -23,8 +23,6 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org", -8 * 3600, 60000); // PST offset
 BH1750 lightMeter(0x23);
 Adafruit_SHT31 sht31 = Adafruit_SHT31();
 
- 
-
 void setup() {
     Serial.begin(115200);
 
@@ -42,22 +40,17 @@ void setup() {
     timeClient.begin();
     timeClient.forceUpdate();  // Make sure we get the time at least once
 
-
-     if (!sht31.begin(0x44)) { // Set the SHT31 address to 0x44 or 0x45 depending on your wiring
+    if (!sht31.begin(0x44)) { // Set the SHT31 address to 0x44 or 0x45 depending on your wiring
         Serial.println("Couldn't find SHT31");
         while (1) delay(10);
     }
     // Initialize the SHT31 sensor
-     if (!lightMeter.begin(BH1750::CONTINUOUS_HIGH_RES_MODE, 0x23)) {
+    if (!lightMeter.begin(BH1750::CONTINUOUS_HIGH_RES_MODE, 0x23)) {
         Serial.println("Could not find a valid BH1750 sensor, check wiring!");
     }
-
-
-
 }
 
 void loop() {
-
     timeClient.update();
 
     // Reading temperature and humidity from the SHT31 sensor
@@ -67,7 +60,7 @@ void loop() {
     int sensorID = 2;  // Replace with your actual sensor ID
 
     // Get the formatted date/time
-    time_t now = timeClient.getEpochTime();
+    time_t now = timeClient.getEpochTime() + 3600; // Adjust time by adding 1 hour (3600 seconds)
     struct tm *timeinfo = localtime(&now);
     char buffer[30];
     strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", timeinfo);
