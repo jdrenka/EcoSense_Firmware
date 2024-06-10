@@ -9,6 +9,7 @@
 #include <WiFiManager.h>
 #include <esp_task_wdt.h>
 #include <nvs_flash.h>  // Include NVS library
+#include <WebServer.h>  // Include WebServer library
 
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", -7 * 3600, 60000);  // Adjust for UTC-7 (e.g., Pacific Daylight Time)
@@ -16,11 +17,26 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org", -7 * 3600, 60000);  // Adjust for U
 Adafruit_SHT31 sht31 = Adafruit_SHT31();
 BH1750 lightMeter(0x23);
 
-const char* serverName = "http://192.168.1.83:3000/dataBay";  // Use HTTP for now
+const char* serverName = "https://portfolio-418719.uw.r.appspot.com/dataBay";  // Use HTTP for now
 
 WiFiManager wifiManager;
+WebServer server(80);  // Define the server object
 
 void httpPostTask(void *parameter);
+
+void handleRoot() {
+    String page = "<html><head>";
+    page += "<style>body{background-color:#333;color:#eee;} .logotextinheader{margin-left: 30%; width: 100%; font-weight: 800; font-size: 2.2vw; letter-spacing: -1px; margin-top: 17px; font-family: 'Roboto', sans-serif; border-radius: 20px; padding: 5%; color: rgb(249, 249, 249);} .withinlogo{color: #209a49;} .button{background-color:#007BFF;color:#fff;padding:10px 20px;border:none;border-radius:5px;font-size:1em;}</style>";
+    page += "<title>Configure WiFi</title></head><body>";
+    page += "<h1 class='logotextinheader'><span class='withinlogo'>eco</span>Sense</h1>";
+    page += "<form action='/wifisave' method='post'>";
+    page += "SSID: <input type='text' name='s'><br>";
+    page += "Password: <input type='password' name='p'><br>";
+    page += "<input type='submit' value='Save' class='button'>";
+    page += "</form></body></html>";
+
+    server.send(200, "text/html", page);
+}
 
 void setup() {
     Serial.begin(115200);
@@ -42,7 +58,17 @@ void setup() {
 
     // WiFiManager to handle WiFi credentials and connection
     wifiManager.setConfigPortalTimeout(180);  // Set timeout for captive portal
-    if (!wifiManager.autoConnect("ESP32_AP")) {
+
+    // Customize menu to hide info page
+    std::vector<const char *> menu = {"wifi", "exit"};
+    wifiManager.setMenu(menu);
+
+    // Add custom HTML and CSS
+    String customHeadElement = "<style>body{background-color:#333;color:#eee;} .logotextinheader{margin-left: 30%; width: 100%; font-weight: 800; font-size: 2.2vw; letter-spacing: -1px; margin-top: 17px; font-family: 'Roboto', sans-serif; border-radius: 20px; padding: 5%; color: rgb(249, 249, 249);} .withinlogo{color: #209a49;} .button{background-color:#007BFF;color:#fff;padding:10px 20px;border:none;border-radius:5px;font-size:1em;}</style>";
+    wifiManager.setCustomHeadElement(customHeadElement.c_str());
+
+    // Start WiFiManager with custom AP name
+    if (!wifiManager.autoConnect("EcoSense_Connect", "password")) {
         Serial.println("Failed to connect to WiFi and hit timeout");
         ESP.restart();
     }
@@ -75,6 +101,10 @@ void setup() {
     esp_task_wdt_init(5, true); // 5 second timeout, panic reset enabled
     esp_task_wdt_add(NULL); // Add current thread to WDT watch
 
+    // Set up custom server handler
+    server.on("/", handleRoot);
+    server.begin();
+
     // Create task for HTTP POST
     xTaskCreate(httpPostTask, "HTTP Post Task", 8192, NULL, 1, NULL);
 }
@@ -83,12 +113,13 @@ void loop() {
     esp_task_wdt_reset(); // Reset watchdog timer
 
     if (WiFi.status() != WL_CONNECTED) {
-        wifiManager.autoConnect("ESP32_AP");
+        wifiManager.autoConnect("EcoSense_AP");
     }
 
     timeClient.update();
 
     delay(1000);  // Adjust the delay as needed
+    server.handleClient();  // Handle web server client requests
 }
 
 void httpPostTask(void *parameter) {
@@ -98,7 +129,7 @@ void httpPostTask(void *parameter) {
         float temperature = sht31.readTemperature();
         float humidity = sht31.readHumidity();
         float lightLevel = lightMeter.readLightLevel();
-        int sensorID = 2;  // Replace with your actual sensor ID
+        String sensorID = "a1-002"; // Replace with your actual sensor ID
 
         // Log sensor readings
         Serial.print("Temperature: ");
@@ -193,6 +224,6 @@ void httpPostTask(void *parameter) {
             // Implement data buffering logic here
         }
 
-        delay(10000);  // Send data every 10 seconds
+        delay(100000);  // Send data every 10 seconds
     }
 }
