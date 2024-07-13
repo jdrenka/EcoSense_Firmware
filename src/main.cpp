@@ -129,7 +129,7 @@ void httpPostTask(void *parameter) {
         float temperature = sht31.readTemperature();
         float humidity = sht31.readHumidity();
         float lightLevel = lightMeter.readLightLevel();
-        String sensorID = "a1-002"; // Replace with your actual sensor ID
+        String sensorID = "a1-001"; // Replace with your actual sensor ID
 
         // Log sensor readings
         Serial.print("Temperature: ");
@@ -224,6 +224,6 @@ void httpPostTask(void *parameter) {
             // Implement data buffering logic here
         }
 
-        delay(100000);  // Send data every 10 seconds
+        delay(10000);  // Send data every 10 seconds
     }
 }
