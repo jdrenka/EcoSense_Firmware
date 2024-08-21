@@ -1,1 +1,6 @@
-## Firmware for ESP32 to work with EcoSense realtime enviornment data montioring app
+### Firmware repo for custom ecosense device
+### Features: 
+- Watchdog timer
+- Functional wifi setup
+- Records timestamp for measurements
+- Sends HTTP requests to ecosense backend 
