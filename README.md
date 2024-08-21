@@ -1,4 +1,4 @@
-### Firmware repo for custom ecosense device
+### Ecosense Firmware Repo
 ### Features: 
 - Watchdog timer
 - Functional wifi setup
